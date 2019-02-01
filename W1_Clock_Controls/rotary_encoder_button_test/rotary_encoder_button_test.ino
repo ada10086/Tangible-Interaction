@@ -3,7 +3,7 @@
 //in setting mode, press once to confirm setting and move on to the next (hr, min, sec)
 
 #include <EasyButton.h>
-#define BUTTON_PIN 9 //pull up resistance
+#define BUTTON_PIN 6 //pull up resistance
 
 // Instance of the button.
 EasyButton button(BUTTON_PIN);
