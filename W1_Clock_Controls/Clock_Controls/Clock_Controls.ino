@@ -18,12 +18,12 @@ Encoder myEnc(7, 8);
 int oldPos  = -999;
 int newPos;
 int startValue = 6; //HH,MM,SS,Month,Day value before change, set arbitrarily
+byte setValue;
 
 //------------------------------------------------------
 
 #include <RTCZero.h>
 RTCZero rtc;      // instance of the realtime clock
-//int thisSecond;   // variable to look for seconds chang
 
 /* Change these values to set the current initial time */
 const byte seconds = 0;
@@ -35,12 +35,6 @@ const byte day = 1;
 const byte month = 1;
 const byte year = 19;
 
-byte setHH;   //0-23
-byte setMM;   //0-59
-byte setSS;   //0-59
-byte setmon;  //1-12
-byte setday;  //1-31
-byte setValue;
 //------------------------------------------------------
 
 
@@ -79,7 +73,7 @@ void loop() {
 
   } else {      //set time
 
-    //setDateTime (int _counter, String _setxx, int _cursorDigit, int _maxValue, int _minValue)
+    //setDateTime (int _counter, String _setxx, int _cursorDigit, int _minValue, int _maxValue)
     setDateTime (1, "set month   ", 0,  1,  12);
     setDateTime (2, "set day     ", 3,  1,  31);
     setDateTime (3, "set hours   ", 8,  0,  23);
