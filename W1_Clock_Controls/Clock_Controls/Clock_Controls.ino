@@ -40,6 +40,7 @@ byte setMM;   //0-59
 byte setSS;   //0-59
 byte setmon;  //1-12
 byte setday;  //1-31
+byte setValue;
 //------------------------------------------------------
 
 
@@ -59,9 +60,10 @@ void setup() {
 
 void loop() {
   button.read();
-  newPos = myEnc.read() / 4; //newPos = change of startValue, increment/decrement by 1 per click
+  newPos = myEnc.read() / 4;  //newPos = change of startValue, increment/decrement by 1 per click
 
   if (counter == 0) {    //display time
+
     lcd.setCursor(0, 0);
     lcd.print("The time is:");
     lcd.setCursor(0, 1);
@@ -75,122 +77,15 @@ void loop() {
     lcd.print(":");
     print2digits(rtc.getSeconds());
 
+  } else {      //set time
 
-  }
-
-  if (counter == 3) {    //set hour
-    //        lcd.setCursor(1,1);
-    //        lcd.blink();  // blink cursor (0,1)
-    //        lcd.setCursor(0,1);
-    //        lcd.blink();  //blink cursor(1,1)
-    lcd.setCursor(0, 0);
-    lcd.print("set HH      ");
-
-    lcd.setCursor(8, 1);  //set cursor for HH
-    startValue = rtc.getHours();
-    if (newPos != oldPos) {
-      if ((startValue + newPos) >= 0 && (startValue + newPos) < 24) { //if within boundary
-        oldPos = newPos;
-        print2digits(startValue + newPos); //output hour 0 - 23
-        setHH = startValue + newPos;   //store value to setHH
-      } else { //if reaches boundary
-        print2digits(startValue + oldPos);   //keep outputing hour 0 or 23
-        setHH = startValue + oldPos;    //store value to setHH
-        myEnc.write(oldPos * 4);  //keep resetting to oldPos(last change of startValue) before next click
-      }
-    }
-  }
-
-  if (counter == 4) { //set min
-    //        lcd.setCursor(1,1);
-    //        lcd.blink();  // blink cursor (0,1)
-    //        lcd.setCursor(0,1);
-    //        lcd.blink();  //blink cursor(1,1)
-    lcd.setCursor(0, 0);
-    lcd.print("set MM      ");
-
-    lcd.setCursor(11, 1);
-    startValue = rtc.getMinutes();
-    if (newPos != oldPos) {
-      if ((startValue + newPos) >= 0 && (startValue + newPos) < 60) {
-        oldPos = newPos;
-        print2digits(startValue + newPos);
-        setMM = startValue + newPos;
-      } else {
-        print2digits(startValue + oldPos);
-        setMM = startValue + oldPos;
-        myEnc.write(oldPos * 4);
-      }
-    }
-  }
-
-  if (counter == 5) {   //set sec
-    //        lcd.setCursor(1,1);
-    //        lcd.blink();  // blink cursor (0,1)
-    //        lcd.setCursor(0,1);
-    //        lcd.blink();  //blink cursor(1,1)
-    lcd.setCursor(0, 0);
-    lcd.print("set SS      ");
-
-    lcd.setCursor(14, 1);
-    startValue = rtc.getSeconds();
-    if (newPos != oldPos) {
-      if ((startValue + newPos) >= 0 && (startValue + newPos) < 60) {
-        oldPos = newPos;
-        print2digits(startValue + newPos);
-        setSS = startValue + newPos;
-      } else {
-        print2digits(startValue + oldPos);
-        setSS = startValue + oldPos;
-        myEnc.write(oldPos * 4);
-      }
-    }
-  }
-
-  if (counter == 1) {
-    //        lcd.setCursor(1,1);
-    //        lcd.blink();  // blink cursor (0,1)
-    //        lcd.setCursor(0,1);
-    //        lcd.blink();  //blink cursor(1,1)
-    lcd.setCursor(0, 0);
-    lcd.print("set month   ");
-
-    lcd.setCursor(0, 1);
-    startValue = rtc.getMonth();
-    if (newPos != oldPos) {
-      if ((startValue + newPos) >= 1 && (startValue + newPos) < 13) {
-        oldPos = newPos;
-        print2digits(startValue + newPos);
-        setmon = startValue + newPos;
-      } else {
-        print2digits(startValue + oldPos);
-        setmon = startValue + oldPos;
-        myEnc.write(oldPos * 4);
-      }
-    }
-  }
-
-    if (counter == 2) {
-    //        lcd.setCursor(1,1);
-    //        lcd.blink();  // blink cursor (0,1)
-    //        lcd.setCursor(0,1);
-    //        lcd.blink();  //blink cursor(1,1)
-    lcd.setCursor(0, 0);
-    lcd.print("set day     ");
-
-    lcd.setCursor(3, 1);
-    startValue = rtc.getDay();
-    if (newPos != oldPos) {
-      if ((startValue + newPos) >= 1 && (startValue + newPos) < 32) {
-        oldPos = newPos;
-        print2digits(startValue + newPos);
-        setday = startValue + newPos;
-      } else {
-        print2digits(startValue + oldPos);
-        setday = startValue + oldPos;
-        myEnc.write(oldPos * 4);
-      }
-    }
+    //setDateTime (int _counter, String _setxx, int _cursorDigit, int _maxValue, int _minValue)
+    setDateTime (1, "set month   ", 0,  1,  12);
+    setDateTime (2, "set day     ", 3,  1,  31);
+    setDateTime (3, "set hours   ", 8,  0,  23);
+    setDateTime (4, "set minutes ", 11,  0,  59);
+    setDateTime (5, "set seconds ", 14,  0,  59);
+    
   }
 }
 
@@ -202,33 +97,64 @@ void print2digits(int number) {
   lcd.print(number);
 }
 
-
-void onPressedCallBack() {   //press when finish setting hour, minute, or second
+void onPressedCallBack() {       //press when finish setting month, day, hour, minute, or second
   Serial.println("Button has been pressed!");
-  if (counter == 0) {
-    counter += 1;
-    Serial.println("Setting mode");    //counter = 1 to set hh
-  } else if (counter == 1) {
-    counter += 1;
-    rtc.setMonth(setmon);
-    Serial.println("HHset");     //counter = 2 to set mm
-  } else if (counter == 2) {
-    counter += 1;
-    rtc.setDay(setday);
-    Serial.println("MMset");     //counter = 3 to set ss
-  } else if (counter == 3) {
-    counter += 1;
-    rtc.setHours(setHH);
-    Serial.println("SSset");     //counter = 0 to display mode
-  } else if (counter == 4) {
-    counter += 1;
-    rtc.setMinutes(setMM);
-    Serial.println("Monthset");
-  } else if (counter == 5) {
-    rtc.setSeconds(setSS);
-    Serial.println("Dayset");
-    counter = 0;
+  switch (counter) {
+    case 0:
+      counter += 1;
+      Serial.println("Setting mode");
+      break;
+    case 1:
+      counter += 1;
+      rtc.setMonth(setValue);
+      Serial.println("Month set");
+      break;
+    case 2:
+      counter += 1;
+      rtc.setDay(setValue);
+      Serial.println("Day set");
+      break;
+    case 3:
+      counter += 1;
+      rtc.setHours(setValue);
+      Serial.println("Hours set");
+      break;
+    case 4:
+      counter += 1;
+      rtc.setMinutes(setValue);
+      Serial.println("Minutes set");
+      break;
+    case 5:
+      rtc.setSeconds(setValue);
+      Serial.println("Seconds set, setting finished");
+      counter = 0;
+      break;
   }
   myEnc.write(0);  //rest enc position to 0 for the next setting
   Serial.println(counter);
+}
+
+
+void setDateTime (int _counter, String _setxx, int _cursorDigit, int _minValue, int _maxValue) {
+  if (counter == _counter) {
+    //            lcd.setCursor(1,1);
+    //            lcd.blink();  // blink cursor (0,1)
+    lcd.setCursor(0, 0);
+    lcd.print(_setxx);
+
+    lcd.setCursor(_cursorDigit, 1);
+    int startValueArray[] = {rtc.getMonth(), rtc.getDay(), rtc.getHours(), rtc.getMinutes(), rtc.getSeconds()};
+    startValue = startValueArray[_counter - 1];
+    if (newPos != oldPos) {
+      if ((startValue + newPos) >= _minValue && (startValue + newPos) <= _maxValue) {
+        oldPos = newPos;
+        setValue = startValue + newPos;
+        print2digits(setValue);
+      } else {
+        setValue = startValue + oldPos;
+        print2digits(setValue);
+        myEnc.write(oldPos * 4);
+      }
+    }
+  }
 }
