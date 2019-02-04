@@ -79,7 +79,7 @@ void loop() {
     setDateTime (3, "set hours   ", 8,  0,  23);
     setDateTime (4, "set minutes ", 11,  0,  59);
     setDateTime (5, "set seconds ", 14,  0,  59);
-    
+
   }
 }
 
@@ -140,15 +140,16 @@ void setDateTime (int _counter, String _setxx, int _cursorDigit, int _minValue, 
     int startValueArray[] = {rtc.getMonth(), rtc.getDay(), rtc.getHours(), rtc.getMinutes(), rtc.getSeconds()};
     startValue = startValueArray[_counter - 1];
     if (newPos != oldPos) {
-      if ((startValue + newPos) >= _minValue && (startValue + newPos) <= _maxValue) {
-        oldPos = newPos;
-        setValue = startValue + newPos;
-        print2digits(setValue);
-      } else {
-        setValue = startValue + oldPos;
-        print2digits(setValue);
-        myEnc.write(oldPos * 4);
+      oldPos = newPos;
+      if ((startValue + newPos) > _maxValue) {
+        newPos -= _maxValue;
+        myEnc.write((newPos - _maxValue) * 4);
+      } else if ((startValue + newPos) < _minValue) {
+        myEnc.write((newPos + _maxValue) * 4);
+        newPos += _maxValue;
       }
+      setValue = (startValue + newPos);
+      print2digits(setValue);
     }
   }
 }
