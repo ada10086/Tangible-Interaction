@@ -141,9 +141,9 @@ void setDateTime (int _counter, String _setxx, int _cursorDigit, int _minValue, 
     startValue = startValueArray[_counter - 1];
     if (newPos != oldPos) {
       oldPos = newPos;
-      if ((startValue + newPos) > _maxValue) {
+      if ((startValue + newPos) > _maxValue) {  //if value goes over limit
         newPos -= _maxValue;
-        myEnc.write((newPos - _maxValue) * 4);
+        myEnc.write((newPos - _maxValue) * 4);    // reset encoder back one cycle
       } else if ((startValue + newPos) < _minValue) {
         myEnc.write((newPos + _maxValue) * 4);
         newPos += _maxValue;
