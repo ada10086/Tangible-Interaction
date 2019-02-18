@@ -2,9 +2,9 @@
 #include <MIDIUSB.h>
 #define PIN_FlexSensor0 A0
 #define PIN_FlexSensor1 A1
-//#define PIN_FlexSensor2 A2;
-//#define PIN_FlexSensor3 A3;
-//#define PIN_FlexSensor4 A4;
+#define PIN_FlexSensor2 A2
+#define PIN_FlexSensor3 A3
+#define PIN_FlexSensor4 A4
 
 // send a 3-byte midi message
 void midiCommand(byte cmd, byte data1, byte  data2) {
@@ -33,7 +33,7 @@ class Finger {
       flexSensor = analogRead(flexSensorPin);
 
       //maps sensor reading to 1 and 0
-      if (flexSensor < 300) {   //(Flex sensor reading 500straight-200 right angle)
+      if (flexSensor < 140) {   //(Flex sensor reading 300straight-150 right angle)
         finger = 1;
       } else {
         finger = 0;
@@ -42,7 +42,7 @@ class Finger {
 
       // flex sensor plays the note or stops it:
       if (finger != lastFinger) {
-        delay(5);
+        delay(100);
         if (finger == 1) {
           midiCommand(0x90, midiNote, 0x7F);
         } else {
@@ -53,8 +53,11 @@ class Finger {
     }
 };
 
-Finger finger0(PIN_FlexSensor0, 0x36);
-Finger finger1(PIN_FlexSensor1, 0x38);
+Finger finger0(PIN_FlexSensor0, 60); //C
+Finger finger1(PIN_FlexSensor1, 62); //D
+Finger finger2(PIN_FlexSensor2, 64); //E
+Finger finger3(PIN_FlexSensor3, 65); //F
+Finger finger4(PIN_FlexSensor4, 67); //G
 
 
 void setup() {
@@ -64,8 +67,9 @@ void setup() {
 
 void loop() {
   int xSensor = analogRead(A5);
-  delay(1);
-  int x = map(xSensor, 0, 1023, 0, 3) - 1;
+  delay(5);
+  int x = map(xSensor, 0, 1023, 0, 2) - 1;
+  int mappedValue = map(xSensor, 0, 1023, 0, 16383);
 
   // x is the pitch bend axis:
   if (x != 0) {
@@ -78,5 +82,8 @@ void loop() {
 
   finger0.triggerRelease();
   finger1.triggerRelease();
+  finger2.triggerRelease();
+  finger3.triggerRelease();
+  finger4.triggerRelease();
 
 }

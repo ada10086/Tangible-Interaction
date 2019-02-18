@@ -25,7 +25,7 @@ void loop() {
   int flexSensor0 = analogRead(flexSensorPin0);
 
   //maps sensor reading to 1 and 0
-  if (flexSensor0 < 300) {   //(Flex sensor reading 500straight-200 right angle)
+  if (flexSensor0 < 170) {   //(Flex sensor reading 300straight-150 right angle)
     finger0 = 1;
   } else {
     finger0 = 0;
@@ -34,7 +34,7 @@ void loop() {
 
   // flex sensor plays the note or stops it:
   if (finger0 != lastFinger0) {
-    delay(5);
+    delay(100);
     if (finger0 == 1) {
       midiCommand(0x90, 0x45, 0x7F);
     } else {
