@@ -3,11 +3,12 @@ void setup() {
 }
 
 void loop() {
-  int xSensor = analogRead(A5);
-  delay(5);
+  int xSensor = analogRead(A6);
+  delay(1);
+  int ySensor = analogRead(A5);
   int x = map(xSensor, 0, 1023, 0, 2)-1;
 
-//  Serial.println(xSensor);
-  Serial.println(x);
+  Serial.println(xSensor);
+//  Serial.println(x);
 
 }

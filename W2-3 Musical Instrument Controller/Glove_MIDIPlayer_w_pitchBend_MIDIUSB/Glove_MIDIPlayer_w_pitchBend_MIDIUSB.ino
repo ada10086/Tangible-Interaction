@@ -33,7 +33,7 @@ class Finger {
       flexSensor = analogRead(flexSensorPin);
 
       //maps sensor reading to 1 and 0
-      if (flexSensor < 140) {   //(Flex sensor reading 300straight-150 right angle)
+      if (flexSensor < 140) {   //(Flex sensor reading 300straight-140 right angle)
         finger = 1;
       } else {
         finger = 0;
