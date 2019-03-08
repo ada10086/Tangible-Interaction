@@ -6,7 +6,7 @@ char keyRight = KEY_RIGHT_ARROW;
 char keyUp = KEY_UP_ARROW;
 char keyDown = KEY_DOWN_ARROW;
 char keyShift = KEY_LEFT_SHIFT;
-
+float lastAccelX = 0;
 // Basic demo for accelerometer readings from Adafruit LIS3DH
 
 #include <Wire.h>
@@ -43,7 +43,7 @@ void setup(void) {
   Serial.println("LIS3DH test!");
 
   if (! lis.begin(0x18)) {   // change this to 0x19 for alternative i2c address
-    Serial.println("Couldnt start");
+    Serial.println("Couldnte start");
     while (1);
   }
   Serial.println("LIS3DH found!");
@@ -58,10 +58,10 @@ void setup(void) {
 
 void loop() {
   lis.read();      // get X Y and Z data at once
-  // Then print out the raw data
-  Serial.print("X:  "); Serial.print(lis.x);
-  Serial.print("  \tY:  "); Serial.print(lis.y);
-  Serial.print("  \tZ:  "); Serial.print(lis.z);
+//  // Then print out the raw data
+//  Serial.print("X:  "); Serial.print(lis.x);
+//  Serial.print("  \tY:  "); Serial.print(lis.y);
+//  Serial.print("  \tZ:  "); Serial.print(lis.z);
 
   /* Or....get a new sensor event, normalized */
   sensors_event_t event;
@@ -71,11 +71,10 @@ void loop() {
 
   /* Display the results (acceleration is measured in m/s^2) */
   Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
-  Serial.print(" \tY: "); Serial.print(event.acceleration.y);
-  Serial.print(" \tZ: "); Serial.print(event.acceleration.z);
-  Serial.println(" m/s^2 ");
-  Serial.print(" \tShift "); Serial.print(boost);
-  
+//  Serial.print(" \tY: "); Serial.print(event.acceleration.y);
+//  Serial.print(" \tZ: "); Serial.print(event.acceleration.z);
+//  Serial.println(" m/s^2 ");
+//  Serial.print(" \tShift "); Serial.println(boost);
   Serial.println();
 
   // keyboard
@@ -85,42 +84,70 @@ void loop() {
     Keyboard.release(keyShift);
   }
 
-// (-2, 2) neutral key release, (-4, -2), (2 - 4)small turn key press + release, (-10,-4)(4,10) sharp turn key hold
-  if (event.acceleration.x > 2 && event.acceleration.x < 5) {
-    Keyboard.press(keyRight);
-    delay(10);
-    Keyboard.release(keyRight);
-    delay(10);
-  } else if (event.acceleration.x >= 5 && event.acceleration.x <= 10) {
-    Keyboard.press(keyRight);
-    delay(100);
-    Keyboard.release(keyRight);
 
+  float rateOfChangeAccelX = (event.acceleration.x - lastAccelX)/lastAccelX;
+  Serial.println(rateOfChangeAccelX);
+
+  if (event.acceleration.x > 2 && abs(rateOfChangeAccelX) < 5) {
+    Keyboard.press(keyRight);
+    delay(10);
+    Keyboard.release(keyRight);
+    delay(10);
+  } else if (event.acceleration.x > 2 && abs(rateOfChangeAccelX) > 5) {
+    Keyboard.press(keyRight);
+    delay(100);
   }
-  else if (event.acceleration.x > -5 && event.acceleration.x < -2) {
+  else if (event.acceleration.x < -2 && abs(rateOfChangeAccelX) < 5) {
     Keyboard.press(keyLeft);
     delay(10);
     Keyboard.release(keyLeft);
     delay(10);
-  } else if (event.acceleration.x >= -10 && event.acceleration.x <= -5) {
+  } else if (event.acceleration.x < -2 && abs(rateOfChangeAccelX) > 5) {
     Keyboard.press(keyLeft);
     delay(100);
-    Keyboard.release(keyLeft);
-  } 
+  }
   else {
     Keyboard.release(keyLeft);
     Keyboard.release(keyRight);
   }
-
+//// (-2, 2) neutral key release, (-4, -2), (2 - 4)small turn key press + release, (-10,-4)(4,10) sharp turn key hold
+//  if (event.acceleration.x > 2 && event.acceleration.x < 5) {
+//    Keyboard.press(keyRight);
+//    delay(10);
+//    Keyboard.release(keyRight);
+//    delay(10);
+//  } else if (event.acceleration.x >= 5 && event.acceleration.x <= 10) {
+//    Keyboard.press(keyRight);
+//    delay(100);
+//    Keyboard.release(keyRight);
+//
+//  }
+//  else if (event.acceleration.x > -5 && event.acceleration.x < -2) {
+//    Keyboard.press(keyLeft);
+//    delay(10);
+//    Keyboard.release(keyLeft);
+//    delay(10);
+//  } else if (event.acceleration.x >= -10 && event.acceleration.x <= -5) {
+//    Keyboard.press(keyLeft);
+//    delay(100);
+//    Keyboard.release(keyLeft);
+//  }
+//  else {
+//    Keyboard.release(keyLeft);
+//    Keyboard.release(keyRight);
+//  }
+//
   if (event.acceleration.z< 6) {  //?z>0
     Keyboard.press(keyUp);
   } 
-//  else if (event.acceleration.z <= 0) {
-//    Keyboard.press(keyDown);
-//  } 
+  else if (event.acceleration.z <= 0) {
+    Keyboard.press(keyDown);
+  } 
   else {
-//    Keyboard.release(keyDown);    
+    Keyboard.release(keyDown);    
     Keyboard.release(keyUp);
   }
   delay(20);
+
+  lastAccelX = event.acceleration.x;
 }
