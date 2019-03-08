@@ -79,26 +79,35 @@ void loop() {
   Serial.println();
 
   // keyboard
-
-
   if (boost == 1) {
     Keyboard.press(keyShift);
   } else {
     Keyboard.release(keyShift);
   }
 
-  if (event.acceleration.x > 2) {
+// (-2, 2) neutral key release, (-4, -2), (2 - 4)small turn key press + release, (-10,-4)(4,10) sharp turn key hold
+  if (event.acceleration.x > 2 && event.acceleration.x < 5) {
     Keyboard.press(keyRight);
-    //too jumpy
+    delay(10);
+    Keyboard.release(keyRight);
+    delay(10);
+  } else if (event.acceleration.x >= 5 && event.acceleration.x <= 10) {
+    Keyboard.press(keyRight);
     delay(100);
     Keyboard.release(keyRight);
-    delay(100);
-  } else if (event.acceleration.x < -2) {
+
+  }
+  else if (event.acceleration.x > -5 && event.acceleration.x < -2) {
+    Keyboard.press(keyLeft);
+    delay(10);
+    Keyboard.release(keyLeft);
+    delay(10);
+  } else if (event.acceleration.x >= -10 && event.acceleration.x <= -5) {
     Keyboard.press(keyLeft);
     delay(100);
     Keyboard.release(keyLeft);
-    delay(100);
-  } else {
+  } 
+  else {
     Keyboard.release(keyLeft);
     Keyboard.release(keyRight);
   }
