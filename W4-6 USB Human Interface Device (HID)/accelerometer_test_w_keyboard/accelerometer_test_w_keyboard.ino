@@ -6,8 +6,6 @@ char keyRight = KEY_RIGHT_ARROW;
 char keyUp = KEY_UP_ARROW;
 char keyDown = KEY_DOWN_ARROW;
 char keyShift = KEY_LEFT_SHIFT;
-float lastAccelX = 0;
-// Basic demo for accelerometer readings from Adafruit LIS3DH
 
 #include <Wire.h>
 #include <SPI.h>
@@ -23,15 +21,11 @@ float lastAccelX = 0;
 
 // software SPI
 Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS, LIS3DH_MOSI, LIS3DH_MISO, LIS3DH_CLK);
-// hardware SPI
-//Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS);
-// I2C
-//Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
-#if defined(ARDUINO_ARCH_SAMD)
-// for Zero, output on USB Serial console, remove line below if using programming port to program the Zero!
-#define Serial SerialUSB
-#endif
+//#if defined(ARDUINO_ARCH_SAMD)
+//// for Zero, output on USB Serial console, remove line below if using programming port to program the Zero!
+//#define Serial SerialUSB
+//#endif
 
 void setup(void) {
   Keyboard.begin();
@@ -47,107 +41,96 @@ void setup(void) {
     while (1);
   }
   Serial.println("LIS3DH found!");
-
+  //The smaller the range, the more sensitive the readings will be
   lis.setRange(LIS3DH_RANGE_2_G);   // 2, 4, 8 or 16 G!
 
   Serial.print("Range = "); Serial.print(2 << lis.getRange());
   Serial.println("G");
 
-  pinMode(2, INPUT_PULLUP);
+  pinMode(6, INPUT_PULLUP); //gas
+  pinMode(5, INPUT_PULLUP);  //boost
+
 }
 
 void loop() {
   lis.read();      // get X Y and Z data at once
-//  // Then print out the raw data
-//  Serial.print("X:  "); Serial.print(lis.x);
-//  Serial.print("  \tY:  "); Serial.print(lis.y);
-//  Serial.print("  \tZ:  "); Serial.print(lis.z);
+    // Then print out the raw data
+    Serial.print("X:  "); Serial.print(lis.x);
+    Serial.print("  \tY:  "); Serial.print(lis.y);
+    Serial.print("  \tZ:  "); Serial.print(lis.z);
 
   /* Or....get a new sensor event, normalized */
   sensors_event_t event;
   lis.getEvent(&event);
-  
-  int boost = digitalRead(6);
 
-  /* Display the results (acceleration is measured in m/s^2) */
-  Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
-//  Serial.print(" \tY: "); Serial.print(event.acceleration.y);
-//  Serial.print(" \tZ: "); Serial.print(event.acceleration.z);
-//  Serial.println(" m/s^2 ");
-//  Serial.print(" \tShift "); Serial.println(boost);
-  Serial.println();
+  int gas = digitalRead(6);
+  int boost = digitalRead(5);
+  
+    /* Display the results (acceleration is measured in m/s^2) */
+    Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
+    Serial.print(" \tY: "); Serial.print(event.acceleration.y);
+    Serial.print(" \tZ: "); Serial.print(event.acceleration.z);
+    Serial.println(" m/s^2 ");
+    Serial.print(" \tShift "); Serial.println(boost);
+    Serial.println();
 
   // keyboard
+  if (gas == 1) {
+    Keyboard.press(keyUp);
+  } else {
+    Keyboard.release(keyUp);
+  }
+
   if (boost == 1) {
     Keyboard.press(keyShift);
   } else {
     Keyboard.release(keyShift);
   }
 
+  //  // (-2, 2) neutral key release, (-5, -2), (2 - 5)small turn key press + release, (-10,-5)(5,10) sharp turn key hold
+  //  if (event.acceleration.x > 2 && event.acceleration.x < 5) {
+  //    Keyboard.press(keyRight);
+  //    delay(50);
+  //    Keyboard.release(keyRight);
+  //    delay(50);
+  //  } else if (event.acceleration.x >= 5) {
+  //    Keyboard.press(keyRight);
+  //    delay(150);
+  ////    Keyboard.release(keyRight);
+  //
+  //  }
+  //  else if (event.acceleration.x > -5 && event.acceleration.x < -2) {
+  //    Keyboard.press(keyLeft);
+  //    delay(50);
+  //    Keyboard.release(keyLeft);
+  //    delay(50);
+  //  } else if (event.acceleration.x <= -5) {
+  //    Keyboard.press(keyLeft);
+  //    delay(150);
+  ////    Keyboard.release(keyLeft);
+  //  }
+  //  else {
+  //    Keyboard.release(keyLeft);
+  //    Keyboard.release(keyRight);
+  //  }
 
-  float rateOfChangeAccelX = (event.acceleration.x - lastAccelX)/lastAccelX;
-  Serial.println(rateOfChangeAccelX);
+// int t = map(abs(event.acceleration.x),2,10,50,150);  //too sensitive
+  int t = 0.5 * pow(1.75, abs(event.acceleration.x)) + 40;     //40-174
 
-  if (event.acceleration.x > 2 && abs(rateOfChangeAccelX) < 5) {
+  if (event.acceleration.x > 2) {
     Keyboard.press(keyRight);
-    delay(10);
+    delay(t);
     Keyboard.release(keyRight);
-    delay(10);
-  } else if (event.acceleration.x > 2 && abs(rateOfChangeAccelX) > 5) {
-    Keyboard.press(keyRight);
-    delay(100);
+    delay(40);
   }
-  else if (event.acceleration.x < -2 && abs(rateOfChangeAccelX) < 5) {
+  else if (event.acceleration.x < -2) {
     Keyboard.press(keyLeft);
-    delay(10);
+    delay(t);
     Keyboard.release(keyLeft);
-    delay(10);
-  } else if (event.acceleration.x < -2 && abs(rateOfChangeAccelX) > 5) {
-    Keyboard.press(keyLeft);
-    delay(100);
+    delay(40);
   }
   else {
     Keyboard.release(keyLeft);
     Keyboard.release(keyRight);
   }
-//// (-2, 2) neutral key release, (-4, -2), (2 - 4)small turn key press + release, (-10,-4)(4,10) sharp turn key hold
-//  if (event.acceleration.x > 2 && event.acceleration.x < 5) {
-//    Keyboard.press(keyRight);
-//    delay(10);
-//    Keyboard.release(keyRight);
-//    delay(10);
-//  } else if (event.acceleration.x >= 5 && event.acceleration.x <= 10) {
-//    Keyboard.press(keyRight);
-//    delay(100);
-//    Keyboard.release(keyRight);
-//
-//  }
-//  else if (event.acceleration.x > -5 && event.acceleration.x < -2) {
-//    Keyboard.press(keyLeft);
-//    delay(10);
-//    Keyboard.release(keyLeft);
-//    delay(10);
-//  } else if (event.acceleration.x >= -10 && event.acceleration.x <= -5) {
-//    Keyboard.press(keyLeft);
-//    delay(100);
-//    Keyboard.release(keyLeft);
-//  }
-//  else {
-//    Keyboard.release(keyLeft);
-//    Keyboard.release(keyRight);
-//  }
-//
-  if (event.acceleration.z< 6) {  //?z>0
-    Keyboard.press(keyUp);
-  } 
-  else if (event.acceleration.z <= 0) {
-    Keyboard.press(keyDown);
-  } 
-  else {
-    Keyboard.release(keyDown);    
-    Keyboard.release(keyUp);
-  }
-  delay(20);
-
-  lastAccelX = event.acceleration.x;
 }

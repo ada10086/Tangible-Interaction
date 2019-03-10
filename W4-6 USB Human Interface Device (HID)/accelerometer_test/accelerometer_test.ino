@@ -38,7 +38,7 @@ void setup(void) {
   }
   Serial.println("LIS3DH found!");
   
-  lis.setRange(LIS3DH_RANGE_2_G);   // 2, 4, 8 or 16 G!
+  lis.setRange(LIS3DH_RANGE_16_G);   // 2, 4, 8 or 16 G!
   
   Serial.print("Range = "); Serial.print(2 << lis.getRange());  
   Serial.println("G");
