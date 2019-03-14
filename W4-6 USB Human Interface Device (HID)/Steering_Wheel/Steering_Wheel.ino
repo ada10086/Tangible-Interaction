@@ -7,6 +7,12 @@ char keyUp = KEY_UP_ARROW;
 char keyDown = KEY_DOWN_ARROW;
 char keyShift = KEY_LEFT_SHIFT;
 
+int period = 0;
+bool isWaitingForKeyRelease = false;
+char keyToRelease;
+unsigned long int waitStartTime;
+
+
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_LIS3DH.h>
@@ -20,27 +26,6 @@ char keyShift = KEY_LEFT_SHIFT;
 #define LIS3DH_CS 7
 
 
-
-#ifdef __arm__
-// should use uinstd.h to define sbrk but Due causes a conflict
-extern "C" char* sbrk(int incr);
-#else  // __ARM__
-extern char *__brkval;
-#endif  // __arm__
- 
-int freeMemory() {
-  char top;
-#ifdef __arm__
-  return &top - reinterpret_cast<char*>(sbrk(0));
-#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
-  return &top - __brkval;
-#else  // __arm__
-  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
-#endif  // __arm__
-}
-
-
-
 // software SPI
 Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS, LIS3DH_MOSI, LIS3DH_MISO, LIS3DH_CLK);
 
@@ -50,7 +35,7 @@ Adafruit_LIS3DH lis = Adafruit_LIS3DH(LIS3DH_CS, LIS3DH_MOSI, LIS3DH_MISO, LIS3D
    #define Serial SerialUSB
 #endif
 
-void setup(void) {
+void setup() {
 #ifndef ESP8266
   while (!Serial);     // will pause Zero, Leonardo, etc until serial console opens
 #endif
@@ -65,9 +50,6 @@ void setup(void) {
   Serial.println("LIS3DH found!");
   
   lis.setRange(LIS3DH_RANGE_2_G);   // 2, 4, 8 or 16 G!
-  
-  Serial.print("Range = "); Serial.print(2 << lis.getRange());  
-  Serial.println("G");
 
   
   pinMode(6, INPUT_PULLUP); //gas
@@ -80,22 +62,9 @@ void loop() {
   int jump = digitalRead(5);
   int boost = digitalRead(4);
 
-  lis.read();      // get X Y and Z data at once
-  // Then print out the raw data
-//  Serial.print("X:  "); Serial.print(lis.x); 
-//  Serial.print("  \tY:  "); Serial.print(lis.y); 
-//  Serial.print("  \tZ:  "); Serial.print(lis.z); 
-
-  /* Or....get a new sensor event, normalized */ 
   sensors_event_t event;
   lis.getEvent(&event);
-//    Serial.println(boost);
-//  /* Display the results (acceleration is measured in m/s^2) */
-  Serial.print("\t\tX: "); Serial.print(event.acceleration.x); 
-//  Serial.print(" \tY: "); Serial.print(event.acceleration.y); 
-//  Serial.print(" \tZ: "); Serial.print(event.acceleration.z); 
-//  Serial.println(" m/s^2 ");
-//  Serial.println();
+  Serial.print("\t\tX: "); Serial.println(event.acceleration.x); 
 
  // keyboard                
   if (gas == 1) {
@@ -114,7 +83,27 @@ void loop() {
     Keyboard.write(32);         
 //    delay(50);
   }
-////    // (-2, 2) neutral key release, (-5, -2), (2 - 5)small turn key press + release, (-10,-5)(5,10) sharp turn key hold
+  
+  int t = 0.5 * pow(1.75, abs(event.acceleration.x)) + 40;     //40-174
+
+  if (event.acceleration.x > 2) {
+    Keyboard.press(keyLeft);
+    delay(t);
+    Keyboard.release(keyLeft);
+    delay(40);
+  }
+  else if (event.acceleration.x < -2) {
+    Keyboard.press(keyRight);
+    delay(t);
+    Keyboard.release(keyRight);
+    delay(40);
+  }
+  else {
+    Keyboard.release(keyLeft);
+    Keyboard.release(keyRight);
+  }
+
+  ////    // (-2, 2) neutral key release, (-5, -2), (2 - 5)small turn key press + release, (-10,-5)(5,10) sharp turn key hold
 //    if (event.acceleration.x > 2 && event.acceleration.x < 5) {
 //      Keyboard.press(keyLeft);
 //      delay(40);
@@ -141,23 +130,4 @@ void loop() {
 //      Keyboard.release(keyLeft);
 //      Keyboard.release(keyRight);
 //    }
-  
-  int t = 0.5 * pow(1.75, abs(event.acceleration.x)) + 40;     //40-174
-
-  if (event.acceleration.x > 2) {
-    Keyboard.press(keyLeft);
-//    delay(t);
-    Keyboard.release(keyLeft);
-//    delay(40);
-  }
-  else if (event.acceleration.x < -2) {
-    Keyboard.press(keyRight);
-//    delay(t);
-    Keyboard.release(keyRight);
-//    delay(40);
-  }
-  else {
-    Keyboard.release(keyLeft);
-    Keyboard.release(keyRight);
-  }
 }
